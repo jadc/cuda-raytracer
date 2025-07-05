@@ -1,22 +1,33 @@
-#include <cstdio>
+#include <fstream>
 #include <cuda_runtime.h>
 
-__global__ void hello_from_gpu()
-{
+#include "vec3.h"
+#include "framebuffer.h"
+
+__global__ void hello_from_gpu() {
     printf("GPU thread %d\n", threadIdx.x);
 }
 
-int main()
-{
-    // launch 1 block with 8 threads
-    hello_from_gpu<<<1, 8>>>();
-    // wait for the kernel to finish and check for errors
-    cudaError_t err = cudaDeviceSynchronize();
+constexpr int width { 256 };
+constexpr int height { 256 };
 
-    if (err != cudaSuccess)
-        printf("CUDA error: %s\n", cudaGetErrorString(err));
-    else
-        printf("Hello from CPU\n");
+int main() {
+    FrameBuffer<width, height> fb {};
+    for (int c { 0 }; c < width; ++c) {
+        for (int r { 0 }; r < height; ++r) {
+            const Vec3 pixel {
+                float(r) / (width-1),
+                float(c) / (height-1),
+                0.0,
+            };
 
+            fb.at(r, c) = std::move(pixel);
+        }
+    }
+
+    // Write frame buffer to ppm
+    std::ofstream file { "output.ppm" };
+    file << fb;
+    file.close();  // RAII later
     return 0;
 }

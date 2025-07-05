@@ -6,12 +6,17 @@
 
 template <int m_width, int m_height>
 class FrameBuffer {
-    std::array<Vec3, m_width * m_height> m_pixels {};
+    std::array<Vec3, m_width * m_height> m_pixels;
 public:
+    // Construct an empty frame buffer
     FrameBuffer() : m_pixels{} {}
 
-    int width() const { return m_width; }
-    int height() const { return m_height; }
+    // Construct a frame buffer with n vectors
+    template<typename... Args>
+    FrameBuffer(Args... args) : m_pixels{args...} {}
+
+    constexpr int width() const { return m_width; }
+    constexpr int height() const { return m_height; }
 
     Vec3 at(int row, int col) const { return m_pixels[row * m_width + col]; }
     Vec3& at(int row, int col) { return m_pixels[row * m_width + col]; }

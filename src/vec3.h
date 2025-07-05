@@ -1,7 +1,9 @@
 #pragma once
 
+#include <array>
+
 class Vec3 {
-    float m_components[3];
+    std::array<float, 3> m_components;
 public:
     Vec3() : m_components{} {}
     Vec3(float x, float y, float z) : m_components{x, y, z} {}

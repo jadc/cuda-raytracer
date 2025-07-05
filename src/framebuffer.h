@@ -1,35 +1,44 @@
 #pragma once
 
+#include <cuda_runtime.h>
 #include <ostream>
 #include <array>
 #include "vec3.h"
 
-template <int m_width, int m_height>
+template <std::size_t w, std::size_t h>
 class FrameBuffer {
-    std::array<Vec3, m_width * m_height> m_pixels;
+    Vec3 m_pixels[w * h];
 public:
     // Construct an empty frame buffer
-    FrameBuffer() : m_pixels{} {}
+    __host__ __device__ FrameBuffer()
+        : m_pixels{}
+        {}
 
     // Construct a frame buffer with n vectors
     template<typename... Args>
-    FrameBuffer(Args... args) : m_pixels{args...} {}
+    __host__ __device__ FrameBuffer(Args... args)
+        : m_pixels{args...}
+        {}
 
-    constexpr int width() const { return m_width; }
-    constexpr int height() const { return m_height; }
+    __host__ __device__ constexpr std::size_t width()  const { return w; }
+    __host__ __device__ constexpr std::size_t height() const { return h; }
 
-    Vec3 at(int row, int col) const { return m_pixels[row * m_width + col]; }
-    Vec3& at(int row, int col) { return m_pixels[row * m_width + col]; }
+    __host__ __device__ Vec3 at(std::size_t row, std::size_t col) const {
+        return m_pixels[row * width() + col];
+    }
+    __host__ __device__ Vec3& at(std::size_t row, std::size_t col) {
+        return m_pixels[row * width() + col];
+    }
 };
 
 // Writes a frame buffer of RGB floats into the given stream as PPM
-template <int m_width, int m_height>
-inline std::ostream& operator<<(std::ostream& os, FrameBuffer<m_width, m_height>& fb) {
-    os << "P3\n" << m_width << ' ' << m_height << "\n255\n";
+template <std::size_t width, std::size_t height>
+inline std::ostream& operator<<(std::ostream& os, FrameBuffer<width, height>& fb) {
+    os << "P3\n" << width << ' ' << height << "\n255\n";
 
-    for (int c { 0 }; c < m_height; ++c) {
-        for (int r { 0 }; r < m_width; ++r) {
-            const Vec3& pixel { fb.at(r, c) };
+    for (std::size_t c { 0 }; c < height; ++c) {
+        for (std::size_t r { 0 }; r < width; ++r) {
+            const auto& pixel { fb.at(r, c) };
 
             // Convert normalized vector components into RGB
             const auto ir { static_cast<int>(255.999 * pixel.x()) };

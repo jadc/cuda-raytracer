@@ -3,7 +3,7 @@
 #include <cuda_runtime.h>
 #include <ostream>
 #include <array>
-#include "vec3.h"
+#include "linalg.h"
 
 template <std::size_t w, std::size_t h>
 class FrameBuffer {

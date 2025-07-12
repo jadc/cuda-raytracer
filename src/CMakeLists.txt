@@ -9,6 +9,7 @@ set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
 
 add_executable(raytracer
     main.cu
+    render.cu
 )
 
 # Enable all warnings, and elevate warnings to errors

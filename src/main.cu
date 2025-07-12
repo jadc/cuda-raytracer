@@ -2,39 +2,19 @@
 #include <cuda_runtime.h>
 
 #include "cuda.h"
-#include "linalg.h"
 #include "framebuffer.h"
-
-// TODO: move all these parameters into their own object
-template <std::size_t width, std::size_t height>
-__global__ void render(FrameBuffer<width, height>* fb, const Vec3* camera_center, const Vec3* first_pixel, const Vec3* pixel_delta_u, const Vec3* pixel_delta_v) {
-    const auto c { blockIdx.x * blockDim.x + threadIdx.x };
-    const auto r { blockIdx.y * blockDim.y + threadIdx.y };
-    if( (r >= fb->width()) || (c >= fb->height()) ) return;
-
-    const Vec3 pixel_center { *first_pixel + (c * *pixel_delta_u) + (r * *pixel_delta_v) };
-    const Ray ray { *camera_center, pixel_center - *camera_center };
-
-    // Compute color of pixel that ray hit (lerped gradient)
-    const auto unit_direction { Vec3::unit_vector(ray.direction()) };
-    const auto a { 0.5f * (unit_direction.y() + 1.0f) };
-
-    fb->at(r, c) = (1.0 - a) * Vec3{1.0f, 1.0f, 1.0f} + a * Vec3{0.3f, 0.5f, 1.0f};
-}
+#include "render.h"
 
 int main() {
+    FrameBuffer fb { /*width=*/512, /*height=*/512 };
+
     constexpr int block_width  { 8 };  // in threads
     constexpr int block_height { 8 };  // in threads
 
-    // Allocate unified memory (shared between host and device) for frame buffer
-    FrameBuffer<512, 512> fb {};
-    cuda_unwrap(cudaMallocManaged((void **)&fb, fb.width() * fb.height() * sizeof(Vec3)));
-
-    // TODO: move all this math to a dedicated function
     // Define camera properties
     constexpr auto focal_length { 1.0f };
     constexpr auto viewport_height { 2.0f };
-    constexpr auto viewport_width { viewport_height * (static_cast<float>(fb.width()) / fb.height()) };
+    const auto viewport_width { viewport_height * (static_cast<float>(fb.width()) / fb.height()) };
 
     // Rays will be emitted from the camera center
     const Vec3 camera_center { 0, 0, 0 };
@@ -53,8 +33,8 @@ int main() {
 
     // Define number of blocks and threads
     dim3 blocks {
-        fb.width() / block_width + 1,
-        fb.height() / block_height + 1,
+        static_cast<unsigned int>(fb.width()) / block_width + 1,
+        static_cast<unsigned int>(fb.height()) / block_height + 1,
     };
     dim3 threads { block_width, block_height };
 

@@ -37,7 +37,7 @@ public:
         , m_viewport_u { m_viewport_width, 0, 0 }  // horizontal
         , m_viewport_v { 0, -viewport_height, 0 }  // vertical
         , m_pixel_delta_u { m_viewport_u / fb.width() }   // horizontal
-        , m_pixel_delta_v { m_viewport_u / fb.height() }  // vertical
+        , m_pixel_delta_v { m_viewport_v / fb.height() }  // vertical
         , m_viewport_upper_left { camera_center - Vec3{0, 0, focal_length} - m_viewport_u/2 - m_viewport_v/2 }
         , m_first_pixel { m_viewport_upper_left + 0.5f * (m_pixel_delta_u + m_pixel_delta_v) }
     {};

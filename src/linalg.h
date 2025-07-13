@@ -21,17 +21,6 @@ public:
     __host__ __device__ float y() const { return m_components[1]; }
     __host__ __device__ float z() const { return m_components[2]; }
 
-    // Calculated properties
-    __host__ __device__ float length_squared() const {
-        return x() * x() + y() * y() + z() * z();
-    }
-    __host__ __device__ float length() const {
-        return std::sqrt(length_squared());
-    }
-    __host__ __device__ static Vec3 unit_vector(const Vec3& vec) {
-        return vec / vec.length();
-    }
-
     // Unary overloads
     __host__ __device__ float operator[](std::size_t i) const { return m_components[i]; }
     __host__ __device__ float& operator[](std::size_t i) { return m_components[i]; }
@@ -66,6 +55,28 @@ public:
     }
     __host__ __device__ friend Vec3 operator/(float scale, const Vec3& vec) {
         return vec / scale;
+    }
+
+    // Calculated properties
+
+    // The length of the vector, squared
+    __host__ __device__ float length_squared() const {
+        return x() * x() + y() * y() + z() * z();
+    }
+
+    // The length of the vector
+    __host__ __device__ float length() const {
+        return std::sqrt(length_squared());
+    }
+
+    // A unit vector in the same direction as the given vector
+    __host__ __device__ static Vec3 unit_vector(const Vec3& vec) {
+        return vec / vec.length();
+    }
+
+    // The dot product between two vectors
+    __host__ __device__ static float dot(const Vec3& a, const Vec3& b) {
+        return a.x() * b.x() + a.y() * b.y() + a.z() * b.z();
     }
 };
 

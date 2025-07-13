@@ -2,13 +2,13 @@
 
 #include "render.h"
 
-__global__ void render(FrameBuffer* fb, const Vec3* camera_center, const Vec3* first_pixel, const Vec3* pixel_delta_u, const Vec3* pixel_delta_v) {
+__global__ void render(FrameBuffer* fb, const RenderContext* ctx) {
     const auto c { blockIdx.x * blockDim.x + threadIdx.x };
     const auto r { blockIdx.y * blockDim.y + threadIdx.y };
     if( (r >= fb->width()) || (c >= fb->height()) ) return;
 
-    const Vec3 pixel_center { *first_pixel + (c * *pixel_delta_u) + (r * *pixel_delta_v) };
-    const Ray ray { *camera_center, pixel_center - *camera_center };
+    const Vec3 pixel_center { ctx->first_pixel() + (c * ctx->pixel_delta_u()) + (r * ctx->pixel_delta_v()) };
+    const Ray ray { ctx->camera_center(), pixel_center - ctx->camera_center() };
 
     // Lerped gradient for the background
     const auto unit_direction { Vec3::unit_vector(ray.direction()) };

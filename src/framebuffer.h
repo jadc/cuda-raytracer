@@ -13,14 +13,16 @@ class FrameBuffer {
 public:
     // Construct an empty frame buffer, allocating space on device
     __host__ FrameBuffer(std::size_t width, std::size_t height) : m_width{width}, m_height{height} {
-        // Allocate unified memory (shared between host and device) for frame buffer
-        // TODO: Managed memory is simpler, but not strictly necessary; replace with traditional device-only memory?
         cuda_unwrap(cudaMallocManaged(&m_pixels, width * height * sizeof(Vec3)));
+        cuda_unwrap(cudaGetLastError());
+        cuda_unwrap(cudaDeviceSynchronize());
     }
 
     // RAII
     __host__ ~FrameBuffer() {
+        cuda_unwrap(cudaDeviceSynchronize());
         cuda_unwrap(cudaFree(m_pixels));
+        cuda_unwrap(cudaGetLastError());
     }
 
     __host__ __device__ std::size_t width()  const { return m_width; }
@@ -35,7 +37,7 @@ public:
 };
 
 // Writes a frame buffer of RGB floats into the given stream as PPM
-inline std::ostream& operator<<(std::ostream& os, FrameBuffer& fb) {
+inline std::ostream& operator<<(std::ostream& os, const FrameBuffer& fb) {
     os << "P3\n" << fb.width() << ' ' << fb.height() << "\n255\n";
 
     for (std::size_t r { 0 }; r < fb.width(); ++r) {

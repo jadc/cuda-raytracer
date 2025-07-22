@@ -19,3 +19,67 @@ inline void unwrap_cuda(cudaError_t error, const std::string func, const std::st
     cudaDeviceReset();
     std::exit(1);
 }
+
+// TODO: maybe make_global and make_unified?, both return DeviceMemory instances?
+
+template <typename T>
+class GlobalMemory {
+    T* ptr;
+public:
+    template <typename... Args>
+    __host__ GlobalMemory(Args&&... args) {
+        // Allocate device global memory for T
+        cuda_unwrap(cudaMalloc(static_cast<void**>(&ptr), sizeof(T)));
+        cuda_unwrap(cudaGetLastError());
+        cuda_unwrap(cudaDeviceSynchronize());
+
+        // Create temporary based on constructor parameters
+        // TODO: this is gonna call the destructor early
+        T temp { std::forward<Args>(args)... };
+
+        // Initialize T in device global memory with temporary
+        cuda_unwrap(cudaMemcpy(ptr, &temp, sizeof(T), cudaMemcpyHostToDevice));
+        cuda_unwrap(cudaGetLastError());
+        cuda_unwrap(cudaDeviceSynchronize());
+    }
+
+    __host__ __device__ T* const get() const { return ptr; }
+    __device__ T& operator*() { return *ptr; }
+    __device__ const T& operator*() const { return *ptr; }
+    __device__ T* operator->() { return ptr; }
+
+    __host__ ~GlobalMemory() {
+        cuda_unwrap(cudaDeviceSynchronize());
+        cuda_unwrap(cudaFree(ptr));
+        cuda_unwrap(cudaGetLastError());
+    }
+};
+
+
+template <typename T>
+class UnifiedMemory {
+    T* ptr;
+public:
+    template <typename... Args>
+    __host__ UnifiedMemory(Args&&... args) {
+        // Allocate device global memory for T
+        cuda_unwrap(cudaMallocManaged(&ptr, sizeof(T)));
+        cuda_unwrap(cudaGetLastError());
+        cuda_unwrap(cudaDeviceSynchronize());
+
+        // Initialize T with constructor arguments
+        new(ptr) T{ std::forward<Args>(args)... };
+    }
+
+    __host__ __device__ T* const get() const { return ptr; }
+    __host__ __device__ T& operator*() { return *ptr; }
+    __host__ __device__ const T& operator*() const { return *ptr; }
+    __host__ __device__ T* operator->() { return ptr; }
+
+    __host__ ~UnifiedMemory() {
+        //delete ptr;
+        cuda_unwrap(cudaDeviceSynchronize());
+        cuda_unwrap(cudaFree(ptr));
+        cuda_unwrap(cudaGetLastError());
+    }
+};

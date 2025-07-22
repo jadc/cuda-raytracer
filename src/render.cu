@@ -15,7 +15,6 @@ __device__ Vec3 color(const Ray& ray) {
     // If ray intersects with sphere, draw green
     if (hit_sphere(ray, { 0, 0, -1 }, 0.5f))
         return { 0, 1, 0 };
-
     // Lerped gradient for the background
     const auto unit_direction { Vec3::unit_vector(ray.direction()) };
     const auto a { 0.5f * (unit_direction.y() + 1.0f) };
@@ -23,7 +22,7 @@ __device__ Vec3 color(const Ray& ray) {
     return (1.0 - a) * Vec3{1.0f, 1.0f, 1.0f} + a * Vec3{0.5f, 0.7f, 1.0f};
 }
 
-__global__ void render(FrameBuffer* fb, const RenderContext* ctx) {
+__global__ void render(const RenderContext* ctx, FrameBuffer* fb) {
     const auto c { blockIdx.x * blockDim.x + threadIdx.x };
     const auto r { blockIdx.y * blockDim.y + threadIdx.y };
     if( (r >= fb->width()) || (c >= fb->height()) ) return;

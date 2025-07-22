@@ -22,6 +22,7 @@ public:
     __host__ __device__ float z() const { return m_components[2]; }
 
     // Unary overloads
+    __host__ __device__ Vec3 operator-() const { return *this * -1; }
     __host__ __device__ float operator[](std::size_t i) const { return m_components[i]; }
     __host__ __device__ float& operator[](std::size_t i) { return m_components[i]; }
 
@@ -98,7 +99,7 @@ public:
     __device__ const Vec3& direction() const { return m_direction; }
 
     // A vector on the ray with magnitude t.
-    __device__ Vec3 at(float t) {
+    __device__ Vec3 at(float t) const {
         return origin() + t * direction();
     }
 };

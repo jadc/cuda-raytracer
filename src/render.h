@@ -5,6 +5,13 @@
 #include "linalg.h"
 #include "framebuffer.h"
 
+namespace Math {
+    constexpr float infinity { std::numeric_limits<float>::infinity() };
+    constexpr float pi { 3.1415927f };
+
+    inline float radians(float degrees) { return degrees * pi / 180.0f; }
+}
+
 class RenderContext {
     // Camera properties
     float m_focal_length;
@@ -48,4 +55,4 @@ public:
     __device__ const Vec3& pixel_delta_v() const { return m_pixel_delta_v; };
 };
 
-__global__ void render(FrameBuffer* fb, const RenderContext* ctx);
+__global__ void render(const RenderContext* ctx, FrameBuffer* fb);

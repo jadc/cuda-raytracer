@@ -1,13 +1,14 @@
 #pragma once
 
 #include <cuda_runtime.h>
+#include <numbers>
 
 #include "linalg.h"
 #include "framebuffer.h"
 
 namespace Math {
     constexpr float infinity { std::numeric_limits<float>::infinity() };
-    constexpr float pi { 3.1415927f };
+    constexpr float pi { std::numbers::pi_v<float> };
 
     inline float radians(float degrees) { return degrees * pi / 180.0f; }
 }

@@ -25,7 +25,7 @@ __device__ Vec3 color(const Ray& ray) {
 __global__ void render(const RenderContext* ctx, FrameBuffer* fb) {
     const auto c { blockIdx.x * blockDim.x + threadIdx.x };
     const auto r { blockIdx.y * blockDim.y + threadIdx.y };
-    if( (r >= fb->width()) || (c >= fb->height()) ) return;
+    if( (c >= fb->width()) || (r >= fb->height()) ) return;
 
     const Vec3 pixel_center { ctx->first_pixel() + (c * ctx->pixel_delta_u()) + (r * ctx->pixel_delta_v()) };
     const Ray ray { ctx->camera_center(), pixel_center - ctx->camera_center() };

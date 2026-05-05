@@ -32,8 +32,8 @@ public:
 inline std::ostream& operator<<(std::ostream& os, const FrameBuffer& fb) {
     os << "P3\n" << fb.width() << ' ' << fb.height() << "\n255\n";
 
-    for (std::size_t r { 0 }; r < fb.width(); ++r) {
-        for (std::size_t c { 0 }; c < fb.height(); ++c) {
+    for (std::size_t r { 0 }; r < fb.height(); ++r) {
+        for (std::size_t c { 0 }; c < fb.width(); ++c) {
             const auto& pixel { fb.at(r, c) };
 
             // Convert normalized vector components into RGB
@@ -48,4 +48,3 @@ inline std::ostream& operator<<(std::ostream& os, const FrameBuffer& fb) {
 
     return os;
 }
-

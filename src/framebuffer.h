@@ -2,7 +2,6 @@
 
 #include <cuda_runtime.h>
 #include <ostream>
-#include <array>
 #include "linalg.h"
 #include "cuda.h"
 
@@ -11,7 +10,7 @@ class FrameBuffer {
     std::size_t m_height;
     UnifiedMemory<Vec3> m_pixels;
 public:
-    // Construct an empty frame buffer, allocating space on device
+    // Construct an empty frame buffer, allocating pixels on device
     __host__ FrameBuffer(std::size_t width, std::size_t height)
         : m_width{width}
         , m_height{height}

@@ -2,13 +2,14 @@
 
 #include <cuda_runtime.h>
 #include <utility>
+#include <cassert>
 
 #include "cuda.h"
 #include "shapes.h"
 
 class World {
     std::size_t m_count;
-    std::size_t m_capacity;
+    const std::size_t m_capacity;
     UnifiedMemory<Hittable> m_objects;
 public:
     __host__ World(std::size_t capacity)
@@ -20,7 +21,8 @@ public:
     // Construct new Shape in unified memory in-place
     template <typename Shape, typename... Args>
     __host__ void emplace(Args&&... args) {
-        auto& obj = m_objects.get()[m_count++];
+        assert(m_count < m_capacity && "World capacity is full");
+        auto& obj = m_objects[m_count++];
         obj.type = Shape::tag;
         new (&obj.data) Shape{std::forward<Args>(args)...};
     }
@@ -33,7 +35,7 @@ public:
         // Test if the ray cast collides with any objects in world
         // Update the temporary hit to the closest hit
         for (std::size_t i { 0 }; i < m_count; ++i) {
-            if (m_objects.get()[i].hit(ray, t_min, closest_so_far, temp_rec)) {
+            if (m_objects[i].hit(ray, t_min, closest_so_far, temp_rec)) {
                 hit_anything = true;
                 closest_so_far = temp_rec.t;
                 rec = temp_rec;

@@ -3,7 +3,7 @@
 #include "render.h"
 
 __device__ Vec3 color(const Ray& ray, const World& world) {
-    if (const auto hit { world.hit(ray, 0, Math::infinity) })
+    if (const auto hit { world.hit(ray, {0, Math::infinity}) })
         return 0.5 * (hit->normal + Vec3{1.0, 1.0, 1.0});
 
     const auto unit_direction { Vec3::unit_vector(ray.direction()) };

@@ -27,14 +27,13 @@ public:
         new (&obj.data) Shape{std::forward<Args>(args)...};
     }
 
-    __device__ cuda::std::optional<Hit> hit(const Ray& ray, float t_min, float t_max) const {
+    __device__ cuda::std::optional<Hit> hit(const Ray& ray, Interval t) const {
         cuda::std::optional<Hit> hit;
-        auto closest_so_far { t_max };
 
         // If the ray cast collides with any objects in world, return the closest
         for (std::size_t i { 0 }; i < m_count; ++i) {
-            if (const auto obj { m_objects[i].hit(ray, t_min, closest_so_far) }) {
-                closest_so_far = obj->t;
+            if (const auto obj { m_objects[i].hit(ray, t) }) {
+                t.max = obj->t;
                 hit = obj;
             }
         }

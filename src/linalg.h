@@ -104,6 +104,13 @@ public:
     }
 };
 
+struct Interval {
+    float min;
+    float max;
+
+    __host__ __device__ bool surrounds(float val) const { return min < val && val < max; }
+};
+
 struct Hit {
     Vec3 point;
     Vec3 normal;

@@ -6,10 +6,7 @@
 #include "render.h"
 
 int main() {
-    constexpr std::size_t width  { 512 };
-    constexpr std::size_t height { 512 };
-
-    FrameBuffer fb { width, height };
+    FrameBuffer fb { 1280, 16.0 / 10.0 };
 
     World world(2);
     world.emplace<Sphere>(Vec3{ 0, 0, -1 }, 0.5f);
@@ -28,8 +25,8 @@ int main() {
     constexpr std::size_t block_height { 8 };  // in threads
 
     dim3 blocks {
-        width / block_width + 1,
-        height / block_height + 1,
+        static_cast<uint32_t>(fb.width() / block_width + 1),
+        static_cast<uint32_t>(fb.height() / block_height + 1),
     };
     dim3 threads { block_width, block_height };
 

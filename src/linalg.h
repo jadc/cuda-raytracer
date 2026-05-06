@@ -103,3 +103,15 @@ public:
         return origin() + t * direction();
     }
 };
+
+struct Hit {
+    Vec3 point;
+    Vec3 normal;
+    float t;
+    bool front_face;
+
+    __device__ void set_face_normal(const Ray& ray, const Vec3& outward_normal) {
+        front_face = Vec3::dot(ray.direction(), outward_normal) < 0;
+        normal = front_face ? outward_normal : -outward_normal;
+    }
+};

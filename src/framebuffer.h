@@ -17,6 +17,11 @@ public:
         , m_pixels{width * height}
         {}
 
+
+    __host__ FrameBuffer(std::size_t width, double aspect_ratio)
+        : FrameBuffer(width, std::max(static_cast<std::size_t>(width / aspect_ratio), 1lu))
+        {}
+
     __host__ __device__ std::size_t width()  const { return m_width; }
     __host__ __device__ std::size_t height() const { return m_height; }
 

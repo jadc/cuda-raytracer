@@ -4,7 +4,7 @@
 #include <cuda/std/optional>
 #include <cstdint>
 
-#include "linalg.h"
+#include "math.h"
 
 // Each enum should match a class/struct that implements `hit`
 #define SHAPE_LIST(X) \

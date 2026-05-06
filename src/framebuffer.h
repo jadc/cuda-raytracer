@@ -2,7 +2,7 @@
 
 #include <cuda_runtime.h>
 #include <ostream>
-#include "linalg.h"
+#include "math.h"
 #include "cuda.h"
 
 class FrameBuffer {

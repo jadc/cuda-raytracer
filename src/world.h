@@ -16,7 +16,7 @@ public:
         : m_count{0}
         , m_capacity{capacity}
         , m_objects{capacity}
-        {}
+        {};
 
     // Construct new Shape in unified memory in-place
     template <typename Shape, typename... Args>
@@ -27,21 +27,18 @@ public:
         new (&obj.data) Shape{std::forward<Args>(args)...};
     }
 
-    __device__ bool hit(const Ray& ray, float t_min, float t_max, Hit& rec) const {
-        Hit temp_rec;
-        bool hit_anything { false };
+    __device__ cuda::std::optional<Hit> hit(const Ray& ray, float t_min, float t_max) const {
+        cuda::std::optional<Hit> hit;
         auto closest_so_far { t_max };
 
-        // Test if the ray cast collides with any objects in world
-        // Update the temporary hit to the closest hit
+        // If the ray cast collides with any objects in world, return the closest
         for (std::size_t i { 0 }; i < m_count; ++i) {
-            if (m_objects[i].hit(ray, t_min, closest_so_far, temp_rec)) {
-                hit_anything = true;
-                closest_so_far = temp_rec.t;
-                rec = temp_rec;
+            if (const auto obj { m_objects[i].hit(ray, t_min, closest_so_far) }) {
+                closest_so_far = obj->t;
+                hit = obj;
             }
         }
 
-        return hit_anything;
+        return hit;
     }
 };

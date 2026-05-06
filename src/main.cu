@@ -11,9 +11,13 @@ int main() {
 
     FrameBuffer fb { width, height };
 
-    // Define constants related to rendering
+    World world(2);
+    world.emplace<Sphere>(Vec3{ 0, 0, -1 }, 0.5f);
+    world.emplace<Sphere>(Vec3{ 0, -100.5, -1 }, 100.0f);
+
     const RenderContext ctx {
         /*     framebuffer=*/fb,
+        /*          world=*/world,
         /*    focal_length=*/1.0f,
         /* viewport_height=*/2.0f,
         /*   camera_center=*/{ 0, 0, 0 },

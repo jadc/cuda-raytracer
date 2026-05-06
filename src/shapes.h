@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cuda_runtime.h>
+#include <cuda/std/optional>
 #include <cstdint>
 
 #include "linalg.h"
@@ -29,28 +30,32 @@ struct Sphere {
         , radius{std::fmax(radius, 0.0f)}
         {}
 
-    __device__ bool hit(const Ray& ray, float t_min, float t_max, Hit& hit) const {
-        const Vec3 oc { center - ray.origin() };
+    __device__ cuda::std::optional<Hit> hit(const Ray& ray, float t_min, float t_max) const {
+        const auto oc { center - ray.origin() };
         const auto a { ray.direction().length_squared() };
         const auto h { Vec3::dot(ray.direction(), oc) };
         const auto c { oc.length_squared() - radius * radius };
 
+        // If the ray hit the sphere, continue
         const auto discriminant { h * h - a * c };
-        if (discriminant < 0) return false;
+        if (discriminant < 0) return cuda::std::nullopt;
 
+        // Reject any hits outside the t interval
         const auto sqrtd = std::sqrt(discriminant);
         auto root { (h - sqrtd) / a };
         if (root <= t_min || t_max <= root) {
             root = (h + sqrtd) / a;
             if (root <= t_min || t_max <= root)
-                return false;
+                return cuda::std::nullopt;
         }
 
-        hit.t = root;
-        hit.point = ray.at(hit.t);
+        Hit hit {
+            .point = ray.at(root),
+            .t = root,
+        };
         hit.set_face_normal(ray, (hit.point - center) / radius);
 
-        return true;
+        return hit;
     }
 };
 /******************/
@@ -65,13 +70,13 @@ struct Hittable {
         #undef VARIANT
     } data;
 
-    __device__ bool hit(const Ray& ray, float t_min, float t_max, Hit& rec) const {
+    __device__ cuda::std::optional<Hit> hit(const Ray& ray, float t_min, float t_max) const {
         // Poor man's Rust enum matching, basically (CUDA doesn't support std::variant)
         switch (type) {
-            #define MATCH(Type) case ShapeType::Type: return data.Type.hit(ray, t_min, t_max, rec);
+            #define MATCH(Type) case ShapeType::Type: return data.Type.hit(ray, t_min, t_max);
             SHAPE_LIST(MATCH)
             #undef SHAPE_HIT_CASE
         }
-        return false;
+        return cuda::std::nullopt;
     }
 };

@@ -30,7 +30,7 @@ struct Sphere {
         , radius{std::fmax(radius, 0.0f)}
         {}
 
-    __device__ cuda::std::optional<Hit> hit(const Ray& ray, float t_min, float t_max) const {
+    __device__ cuda::std::optional<Hit> hit(const Ray& ray, Interval t) const {
         const auto oc { center - ray.origin() };
         const auto a { ray.direction().length_squared() };
         const auto h { Vec3::dot(ray.direction(), oc) };
@@ -43,9 +43,9 @@ struct Sphere {
         // Reject any hits outside the t interval
         const auto sqrtd = std::sqrt(discriminant);
         auto root { (h - sqrtd) / a };
-        if (root <= t_min || t_max <= root) {
+        if (!t.surrounds(root)) {
             root = (h + sqrtd) / a;
-            if (root <= t_min || t_max <= root)
+            if (!t.surrounds(root))
                 return cuda::std::nullopt;
         }
 
@@ -70,10 +70,10 @@ struct Hittable {
         #undef VARIANT
     } data;
 
-    __device__ cuda::std::optional<Hit> hit(const Ray& ray, float t_min, float t_max) const {
+    __device__ cuda::std::optional<Hit> hit(const Ray& ray, Interval t) const {
         // Poor man's Rust enum matching, basically (CUDA doesn't support std::variant)
         switch (type) {
-            #define MATCH(Type) case ShapeType::Type: return data.Type.hit(ray, t_min, t_max);
+            #define MATCH(Type) case ShapeType::Type: return data.Type.hit(ray, t);
             SHAPE_LIST(MATCH)
             #undef SHAPE_HIT_CASE
         }

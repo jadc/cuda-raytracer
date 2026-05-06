@@ -112,10 +112,13 @@ public:
 };
 
 struct Interval {
-    float min;
-    float max;
+    // Default interval is empty
+    float min { Math::infinity };
+    float max { -1 * Math::infinity };
 
-    __host__ __device__ bool surrounds(float val) const { return min < val && val < max; }
+    __host__ __device__ constexpr bool size() const { return max - min; }
+    __host__ __device__ constexpr bool contains(float val) const { return min <= val && val <= max; }
+    __host__ __device__ constexpr bool surrounds(float val) const { return min < val && val < max; }
 };
 
 struct Hit {

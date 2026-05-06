@@ -1,9 +1,16 @@
 #pragma once
 
-#include <cuda_runtime.h>
-#include <array>
-#include <ostream>
 #include <cmath>
+#include <cuda_runtime.h>
+#include <numbers>
+#include <ostream>
+
+namespace Math {
+    constexpr float infinity { std::numeric_limits<float>::infinity() };
+    constexpr float pi { std::numbers::pi_v<float> };
+
+    inline float radians(float degrees) { return degrees * pi / 180.0f; }
+}
 
 class Vec3 {
     float m_components[3];

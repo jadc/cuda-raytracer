@@ -2,8 +2,8 @@
 
 #include "render.h"
 
-__device__ Vec3 color(const Ray& ray, const World& world) {
-    if (const auto hit { world.hit(ray, {0, Math::infinity}) })
+__device__ Vec3 color(const Ray& ray, const World* world) {
+    if (const auto hit { world->hit(ray, {0, Math::infinity}) })
         return 0.5 * (hit->normal + Vec3{1.0, 1.0, 1.0});
 
     const auto unit_direction { Vec3::unit_vector(ray.direction()) };
@@ -17,8 +17,8 @@ __global__ void render(const RenderContext* ctx, FrameBuffer* fb) {
     const auto r { blockIdx.y * blockDim.y + threadIdx.y };
     if( (c >= fb->width()) || (r >= fb->height()) ) return;
 
-    const Vec3 pixel_center { ctx->first_pixel() + (c * ctx->pixel_delta_u()) + (r * ctx->pixel_delta_v()) };
-    const Ray ray { ctx->camera_center(), pixel_center - ctx->camera_center() };
+    const Vec3 pixel_center { ctx->first_pixel + (c * ctx->pixel_delta_u) + (r * ctx->pixel_delta_v) };
+    const Ray ray { ctx->camera_center, pixel_center - ctx->camera_center };
 
-    fb->at(r, c) = color(ray, ctx->world());
+    fb->at(r, c) = color(ray, ctx->world);
 }

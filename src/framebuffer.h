@@ -41,13 +41,14 @@ inline std::ostream& operator<<(std::ostream& os, const FrameBuffer& fb) {
         for (std::size_t c { 0 }; c < fb.width(); ++c) {
             const auto& pixel { fb.at(r, c) };
 
-            // Convert normalized vector components into RGB
-            const auto ir { static_cast<int>(255.999 * pixel.x()) };
-            const auto ig { static_cast<int>(255.999 * pixel.y()) };
-            const auto ib { static_cast<int>(255.999 * pixel.z()) };
+            // Normalize vector components, then convert into RGB
+            static constexpr Interval intensity { 0.000f, 0.999f };
+            const auto r { static_cast<int>(256 * intensity.clamp(pixel.x())) };
+            const auto g { static_cast<int>(256 * intensity.clamp(pixel.y())) };
+            const auto b { static_cast<int>(256 * intensity.clamp(pixel.z())) };
 
             // Output pixel to stream
-            os << ir << ' ' << ig << ' ' << ib << '\n';
+            os << r << ' ' << g << ' ' << b << '\n';
         }
     }
 

@@ -9,7 +9,7 @@ namespace Math {
     constexpr float infinity { std::numeric_limits<float>::infinity() };
     constexpr float pi { std::numbers::pi_v<float> };
 
-    inline float radians(float degrees) { return degrees * pi / 180.0f; }
+    __host__ __device__ constexpr float radians(float degrees) { return degrees * pi / 180.0f; }
 }
 
 class Vec3 {
@@ -31,32 +31,50 @@ public:
         return os << "(" << vec.x() << ", " << vec.y() << ", " << vec.z() << ")";
     }
 
-    // Vec3 on Vec3 operations (implicitly commutative)
-    __host__ __device__ Vec3 operator+(const Vec3& other) const {
-        return { x() + other.x(), y() + other.y(), z() + other.z() };
+    // Compound assignment operators
+    __host__ __device__ Vec3& operator+=(const Vec3& other) {
+        m_components[0] += other.m_components[0];
+        m_components[1] += other.m_components[1];
+        m_components[2] += other.m_components[2];
+        return *this;
     }
-    __host__ __device__ Vec3 operator-(const Vec3& other) const {
-        return { x() - other.x(), y() - other.y(), z() - other.z() };
+    __host__ __device__ Vec3& operator-=(const Vec3& other) {
+        m_components[0] -= other.m_components[0];
+        m_components[1] -= other.m_components[1];
+        m_components[2] -= other.m_components[2];
+        return *this;
     }
-    __host__ __device__ Vec3 operator*(const Vec3& other) const {
-        return { x() * other.x(), y() * other.y(), z() * other.z() };
+    __host__ __device__ Vec3& operator*=(const Vec3& other) {
+        m_components[0] *= other.m_components[0];
+        m_components[1] *= other.m_components[1];
+        m_components[2] *= other.m_components[2];
+        return *this;
+    }
+    __host__ __device__ Vec3& operator*=(float scale) {
+        m_components[0] *= scale;
+        m_components[1] *= scale;
+        m_components[2] *= scale;
+        return *this;
+    }
+    __host__ __device__ Vec3& operator/=(float scale) {
+        m_components[0] /= scale;
+        m_components[1] /= scale;
+        m_components[2] /= scale;
+        return *this;
     }
 
-    // Vec3 * Scalar (explicitly commutative)
-    __host__ __device__ Vec3 operator*(float scale) const {
-        return { x() * scale, y() * scale, z() * scale };
-    }
-    __host__ __device__ friend Vec3 operator*(float scale, const Vec3& vec) {
-        return vec * scale;
-    }
+    // Vec3 on Vec3 operations
+    __host__ __device__ Vec3 operator+(const Vec3& other) const { auto r = *this; r += other; return r; }
+    __host__ __device__ Vec3 operator-(const Vec3& other) const { auto r = *this; r -= other; return r; }
+    __host__ __device__ Vec3 operator*(const Vec3& other) const { auto r = *this; r *= other; return r; }
 
-    // Vec3 / Scalar (explicitly commutative)
-    __host__ __device__ Vec3 operator/(float scale) const {
-        return { x() / scale, y() / scale, z() / scale };
-    }
-    __host__ __device__ friend Vec3 operator/(float scale, const Vec3& vec) {
-        return vec / scale;
-    }
+    // Vec3 * Scalar (commutative)
+    __host__ __device__ Vec3 operator*(float scale) const { auto r = *this; r *= scale; return r; }
+    __host__ __device__ friend Vec3 operator*(float scale, const Vec3& vec) { return vec * scale; }
+
+    // Vec3 / Scalar (commutative)
+    __host__ __device__ Vec3 operator/(float scale) const { auto r = *this; r /= scale; return r; }
+    __host__ __device__ friend Vec3 operator/(float scale, const Vec3& vec) { return vec / scale; }
 
     // Calculated properties
 
@@ -107,11 +125,25 @@ public:
 struct Interval {
     // Default interval is empty
     float min { Math::infinity };
-    float max { -1 * Math::infinity };
+    float max { -Math::infinity };
 
-    __host__ __device__ constexpr bool size() const { return max - min; }
-    __host__ __device__ constexpr bool contains(float val) const { return min <= val && val <= max; }
-    __host__ __device__ constexpr bool surrounds(float val) const { return min < val && val < max; }
+    __host__ __device__ constexpr float size() const {
+        return max - min;
+    }
+
+    __host__ __device__ constexpr bool contains(float val) const {
+        return min <= val && val <= max;
+    }
+
+    __host__ __device__ constexpr bool surrounds(float val) const {
+        return min < val && val < max;
+    }
+
+    __host__ __device__ constexpr float clamp(float val) const {
+        if (val < min) return min;
+        if (val > max) return max;
+        return val;
+    }
 };
 
 struct Hit {

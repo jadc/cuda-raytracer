@@ -12,13 +12,13 @@ int main() {
     world.emplace<Sphere>(Vec3{ 0, 0, -1 }, 0.5f);
     world.emplace<Sphere>(Vec3{ 0, -100.5, -1 }, 100.0f);
 
-    const RenderContext ctx {
-        /*     framebuffer=*/fb,
-        /*          world=*/world,
-        /*    focal_length=*/1.0f,
-        /* viewport_height=*/2.0f,
-        /*   camera_center=*/{ 0, 0, 0 },
-    };
+    auto ctx = RenderContext()
+        .set_framebuffer(fb)
+        .set_world(world)
+        .set_focal_length(1.0f)
+        .set_viewport_height(2.0f)
+        .set_camera_center({ 0, 0, 0 })
+        .build();
 
     // Define number of blocks and threads
     constexpr std::size_t block_width  { 8 };  // in threads
@@ -31,7 +31,7 @@ int main() {
     dim3 threads { block_width, block_height };
 
     // Render from GPU into frame buffer
-    render<<<blocks, threads>>>(&ctx, &fb);
+    render<<<blocks, threads>>>(&ctx);
 
     // Check for errors and synchronize
     cuda_unwrap(cudaGetLastError());

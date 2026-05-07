@@ -13,15 +13,8 @@ namespace Math {
 }
 
 class Vec3 {
-    float m_components[3];
 public:
-    __host__ __device__ Vec3()
-        : m_components{}
-        {}
-
-    __host__ __device__ Vec3(float x, float y, float z)
-        : m_components{x, y, z}
-        {}
+    float m_components[3] {};
 
     // Getters for each component
     __host__ __device__ float x() const { return m_components[0]; }

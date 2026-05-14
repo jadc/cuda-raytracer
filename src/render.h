@@ -8,7 +8,7 @@
 struct RenderContext {
     FrameBuffer* framebuffer {};
     const World* world {};
-    curandState* rng {};
+    curandState* rng_table {};
 
     // Camera properties
     float focal_length {};
@@ -18,6 +18,8 @@ struct RenderContext {
     // Multisampling for anti-aliasing
     uint32_t samples_per_pixel {};
     float pixel_samples_scale {};
+
+    uint32_t max_depth { 10 };
 
     // Rays will be emitted from the camera center
     Vec3 camera_center;
@@ -39,7 +41,8 @@ struct RenderContext {
     __host__ RenderContext& set_camera_center(Vec3 c)         { camera_center = std::move(c); return *this; }
     __host__ RenderContext& set_focal_length(float f)         { focal_length = f;             return *this; }
     __host__ RenderContext& set_framebuffer(FrameBuffer& fb)  { framebuffer = &fb;            return *this; }
-    __host__ RenderContext& set_rng(curandState* s)           { rng = s;                      return *this; }
+    __host__ RenderContext& set_max_depth(uint32_t d)         { max_depth = d;                return *this; }
+    __host__ RenderContext& set_rng(curandState* s)           { rng_table = s;                return *this; }
     __host__ RenderContext& set_samples_per_pixel(uint32_t s) { samples_per_pixel = s;        return *this; }
     __host__ RenderContext& set_viewport_height(float h)      { viewport_height = h;          return *this; }
     __host__ RenderContext& set_world(const World& w)         { world = &w;                   return *this; }

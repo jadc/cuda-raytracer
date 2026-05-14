@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <cuda_runtime.h>
+#include <curand_kernel.h>
 #include <numbers>
 #include <ostream>
 
@@ -10,6 +11,16 @@ namespace Math {
     constexpr float pi { std::numbers::pi_v<float> };
 
     __host__ __device__ constexpr float radians(float degrees) { return degrees * pi / 180.0f; }
+
+    // A random float within the range [0.0f, 1.0f)
+    __device__ static float random(curandState* state) {
+        return 1.0f - curand_uniform(state);
+    }
+
+    // A random float within the specified range
+    __device__ static float random(curandState* state, float min, float max) {
+        return min + (max - min) * random(state);
+    }
 }
 
 class Vec3 {
@@ -96,6 +107,45 @@ public:
     // The dot product between two vectors
     __host__ __device__ static float dot(const Vec3& a, const Vec3& b) {
         return a.x() * b.x() + a.y() * b.y() + a.z() * b.z();
+    }
+
+    // A random vector where each component is within the range [0.0f, 1.0f)
+    __device__ static Vec3 random(curandState* rng) {
+        return {
+            Math::random(rng),
+            Math::random(rng),
+            Math::random(rng),
+        };
+    }
+
+    // A random vector where each component is within the specified range
+    __device__ static Vec3 random(curandState* rng, float min, float max) {
+        return {
+            Math::random(rng, min, max),
+            Math::random(rng, min, max),
+            Math::random(rng, min, max),
+        };
+    }
+
+    // A unit vector in a random direction
+    __device__ static Vec3 random_unit_vector(curandState* rng) {
+        Vec3 v;
+        float len;
+
+        // Rejection-method: generate random vectors until one
+        // is within a unit sphere (i.e. 0 < length^2 < 1)
+        do {
+            v = Vec3::random(rng, -1.0f, 1.0f);
+            len = v.length_squared();
+        } while (len <= 1e-12f || len > 1.0f);
+
+        return v / std::sqrt(len);
+    }
+
+    // A unit vector in a random direction from a sphere hemisphere
+    __device__ static Vec3 random_on_hemisphere(curandState* rng, const Vec3& normal) {
+        const auto on_unit_sphere { random_unit_vector(rng) };
+        return Vec3::dot(on_unit_sphere, normal) > 0.0f ? on_unit_sphere : -on_unit_sphere;
     }
 };
 

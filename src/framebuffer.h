@@ -33,6 +33,10 @@ public:
     }
 };
 
+constexpr float linear_to_gamma(float x) {
+    return x > 0.0f ? std::sqrt(x) : 0.0f;
+}
+
 // Writes a frame buffer of RGB floats into the given stream as PPM
 inline std::ostream& operator<<(std::ostream& os, const FrameBuffer& fb) {
     os << "P3\n" << fb.width() << ' ' << fb.height() << "\n255\n";
@@ -40,15 +44,19 @@ inline std::ostream& operator<<(std::ostream& os, const FrameBuffer& fb) {
     for (std::size_t r { 0 }; r < fb.height(); ++r) {
         for (std::size_t c { 0 }; c < fb.width(); ++c) {
             const auto& pixel { fb.at(r, c) };
+            auto r = pixel.x(), g = pixel.y(), b = pixel.z();
+
+            // Convert from linear to gamma space
+            r = linear_to_gamma(r), g = linear_to_gamma(g), b = linear_to_gamma(b);
 
             // Normalize vector components, then convert into RGB
             static constexpr Interval intensity { 0.000f, 0.999f };
-            const auto r { static_cast<int>(256 * intensity.clamp(pixel.x())) };
-            const auto g { static_cast<int>(256 * intensity.clamp(pixel.y())) };
-            const auto b { static_cast<int>(256 * intensity.clamp(pixel.z())) };
+            const auto r_byte { static_cast<unsigned>(256 * intensity.clamp(r)) };
+            const auto g_byte { static_cast<unsigned>(256 * intensity.clamp(g)) };
+            const auto b_byte { static_cast<unsigned>(256 * intensity.clamp(b)) };
 
             // Output pixel to stream
-            os << r << ' ' << g << ' ' << b << '\n';
+            os << r_byte << ' ' << g_byte << ' ' << b_byte << '\n';
         }
     }
 

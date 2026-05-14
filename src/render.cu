@@ -19,7 +19,7 @@ __device__ Vec3 color(RenderContext* ctx, const Ray& ray, curandState* rng, uint
         return {};
 
     if (const auto hit { ctx->world->hit(ray, {0.001f, Math::infinity}) }) {
-        const auto direction { Vec3::random_on_hemisphere(rng, hit->normal) };
+        const auto direction { hit->normal + Vec3::random_unit_vector(rng) };
         return 0.5f * color(ctx, Ray{hit->point, direction}, rng, depth + 1);
     }
 

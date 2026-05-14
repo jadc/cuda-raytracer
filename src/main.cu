@@ -38,6 +38,9 @@ int main() {
         .set_world(world)
         .build();
 
+    // Ensure enough stack size for recursive ray bounces
+    cuda_unwrap(cudaDeviceSetLimit(cudaLimitStackSize, 8192));
+
     // Render from GPU into frame buffer
     render<<<blocks, threads>>>(&ctx);
     cuda_unwrap(cudaGetLastError());

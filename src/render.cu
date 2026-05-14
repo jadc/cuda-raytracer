@@ -13,9 +13,15 @@ __global__ void init_rng(curandState* states, std::size_t width, std::size_t hei
 
 
 
-__device__ Vec3 color(const Ray& ray, const World* world) {
-    if (const auto hit { world->hit(ray, {0, Math::infinity}) })
-        return 0.5 * (hit->normal + Vec3{1.0, 1.0, 1.0});
+__device__ Vec3 color(RenderContext* ctx, const Ray& ray, curandState* rng, uint32_t depth = 0) {
+    // Limit recursion depth to avoid blowing out stack
+    if (depth >= ctx->max_depth)
+        return {};
+
+    if (const auto hit { ctx->world->hit(ray, {0.001f, Math::infinity}) }) {
+        const auto direction { Vec3::random_on_hemisphere(rng, hit->normal) };
+        return 0.5f * color(ctx, Ray{hit->point, direction}, rng, depth + 1);
+    }
 
     const auto unit_direction { Vec3::unit_vector(ray.direction()) };
     const auto a { 0.5f * (unit_direction.y() + 1.0f) };
@@ -29,14 +35,13 @@ __global__ void render(RenderContext* ctx) {
     if( (c >= ctx->framebuffer->width()) || (r >= ctx->framebuffer->height()) ) return;
 
     Vec3 final_color {};
-    auto& rng { ctx->rng[r * ctx->framebuffer->width() + c] };
+    auto& rng { ctx->rng_table[r * ctx->framebuffer->width() + c] };
 
-    // TODO: probably a more efficient way to do this in parallel, instead of this serial loop; needs investigation
     for (uint32_t sample { 0 }; sample < ctx->samples_per_pixel; ++sample) {
         // Using per-thread seed, generate a random vector within the [-0.5, -0.5] to [0.5, 0.5] unit square
         const Vec3 offset {
-            curand_uniform(&rng) - 0.5f,
-            curand_uniform(&rng) - 0.5f,
+            Math::random(&rng) - 0.5f,
+            Math::random(&rng) - 0.5f,
             0
         };
 
@@ -48,7 +53,7 @@ __global__ void render(RenderContext* ctx) {
         };
         const Ray ray { ctx->camera_center, pixel_sample - ctx->camera_center };
 
-        final_color += ctx->pixel_samples_scale * color(ray, ctx->world);
+        final_color += ctx->pixel_samples_scale * color(ctx, ray, &rng);
     }
 
     ctx->framebuffer->at(r, c) = final_color;

@@ -99,6 +99,12 @@ public:
         return std::sqrt(length_squared());
     }
 
+    // Whether or not this vector is near zero
+    __host__ __device__ bool near_zero() const {
+        constexpr float s { 1e-8f };
+        return (std::fabs(x()) < s) && (std::fabs(y()) < s) && (std::fabs(z()) < s);
+    }
+
     // A unit vector in the same direction as the given vector
     __host__ __device__ static Vec3 unit_vector(const Vec3& vec) {
         return vec / vec.length();
@@ -146,6 +152,11 @@ public:
     __device__ static Vec3 random_on_hemisphere(curandState* rng, const Vec3& normal) {
         const auto on_unit_sphere { random_unit_vector(rng) };
         return Vec3::dot(on_unit_sphere, normal) > 0.0f ? on_unit_sphere : -on_unit_sphere;
+    }
+
+    // A new vector which is v reflected on a surface with normal n
+    __device__ static Vec3 reflect(const Vec3& v, const Vec3& n) {
+        return v - 2 * Vec3::dot(v, n) * n;
     }
 };
 
@@ -196,9 +207,13 @@ struct Interval {
     }
 };
 
+// Forward declaration to avoid circular dependencies
+struct Material;
+
 struct Hit {
     Vec3 point;
     Vec3 normal;
+    Material* mat;
     float t;
     bool front_face;
 

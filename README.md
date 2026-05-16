@@ -28,3 +28,6 @@ These are some screenshots from throughout development.
 
 #### Lambertian reflections with gamma correction
 ![](img/2026-05-14-04.png)
+
+#### Material system with Lambertian and metal
+![](img/2026-05-16-01.png)

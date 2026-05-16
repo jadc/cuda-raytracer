@@ -22,12 +22,14 @@ struct Sphere {
 
     Vec3 center;
     float radius;
+    Material* mat;
 
-    __host__ __device__ Sphere() : center{}, radius{0} {}
+    __host__ __device__ Sphere() : center{}, radius{0}, mat{nullptr} {}
 
-    __host__ __device__ Sphere(Vec3 center, float radius)
+    __host__ __device__ Sphere(Vec3 center, float radius, Material* mat)
         : center{center}
         , radius{std::fmax(radius, 0.0f)}
+        , mat{mat}
         {}
 
     __device__ cuda::std::optional<Hit> hit(const Ray& ray, Interval t) const {
@@ -51,6 +53,7 @@ struct Sphere {
 
         Hit hit {
             .point = ray.at(root),
+            .mat = mat,
             .t = root,
         };
         hit.set_face_normal(ray, (hit.point - center) / radius);

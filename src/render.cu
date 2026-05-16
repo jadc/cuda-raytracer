@@ -1,5 +1,6 @@
 #include <cuda_runtime.h>
 
+#include "material.h"
 #include "render.h"
 
 __global__ void init_rng(curandState* states, std::size_t width, std::size_t height) {
@@ -19,8 +20,10 @@ __device__ Vec3 color(RenderContext* ctx, const Ray& ray, curandState* rng, uint
         return {};
 
     if (const auto hit { ctx->world->hit(ray, {0.001f, Math::infinity}) }) {
-        const auto direction { hit->normal + Vec3::random_unit_vector(rng) };
-        return 0.5f * color(ctx, Ray{hit->point, direction}, rng, depth + 1);
+        if (const auto scatter { hit->mat->scatter(ray, *hit, rng) })
+            return scatter->attenuation * color(ctx, scatter->scattered, rng, depth + 1);
+
+        return {};
     }
 
     const auto unit_direction { Vec3::unit_vector(ray.direction()) };

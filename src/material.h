@@ -45,9 +45,13 @@ struct Metal {
     static constexpr MaterialType tag = MaterialType::Metal;
 
     Vec3 albedo;
+    float fuzz;
 
     __device__ cuda::std::optional<Scatter> scatter(const Ray& ray, const Hit& hit, curandState* rng) const {
-        const auto reflected { Vec3::reflect(ray.direction(), hit.normal) };
+        auto reflected { Vec3::reflect(ray.direction(), hit.normal) };
+
+        reflected = Vec3::unit_vector(reflected) + (fuzz * Vec3::random_unit_vector(rng));
+
         return Scatter{ .attenuation = albedo, .scattered = Ray{hit.point, reflected} };
     }
 };

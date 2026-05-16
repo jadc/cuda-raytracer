@@ -31,3 +31,6 @@ These are some screenshots from throughout development.
 
 #### Material system with Lambertian and metal
 ![](img/2026-05-16-01.png)
+
+#### Fuzzy reflections
+![](img/2026-05-16-02.png)
